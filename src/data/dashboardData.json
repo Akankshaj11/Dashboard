@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "cspm",
+      "name": "CSPM Executive Dashboard",
+      "widgets": [
+        { "id": "w1", "title": "Cloud Accounts", "type": "pie", "text":"Accounts connected vs not" },
+        { "id": "w2", "title": "Cloud Account Risk Assessment", "type": "pie", "text":"Risk distribution" },
+        { "id": "w3", "title": "Compliance Insights", "type": "empty", "text":"No data yet" }
+      ]
+    },
+    {
+      "id": "cwpp",
+      "name": "CWPP Dashboard",
+      "widgets": [
+        { "id": "w4", "title": "Top 5 Namespace Alerts", "type": "bar", "text":"Alert counts" },
+        { "id": "w5", "title": "Workload Alerts", "type": "empty", "text":"No data available" }
+      ]
+    },
+    {
+      "id": "registry",
+      "name": "Registry Scan",
+      "widgets": [
+        { "id": "w6", "title": "Image Risk Assessment", "type": "bar", "text":"Severity counts" },
+        { "id": "w7", "title": "Vessel Fill", "type": "tube", "text":"Image scan capacity" }
+      ]
+    },
+    {
+      "id": "tickets",
+      "name": "Ticket",
+      "widgets": []
+    }
+  ]
+}
