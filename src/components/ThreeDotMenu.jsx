@@ -6,9 +6,14 @@ export default function ThreeDotMenu() {
   const [filter, setFilter] = useState('Last 2 days');
   const buttonRef = useRef();
   const dropdownRef = useRef();
-  const [dropdownStyles, setDropdownStyles] = useState({ right: '0px' });
+  const [dropdownStyles, setDropdownStyles] = useState({
+    top: '100%',
+    right: '0px',
+    opacity: 0,
+    transform: 'scale(0.95)',
+  });
 
-  // Close dropdown if clicked outside
+  // Close dropdown when clicked outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -21,28 +26,77 @@ export default function ThreeDotMenu() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
-  // Calculate dropdown position to prevent overflow
+  // Adjust dropdown position smoothly and without flicker
   useEffect(() => {
     if (open && buttonRef.current && dropdownRef.current) {
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      const dropdownWidth = dropdownRef.current.offsetWidth;
-      const spaceRight = window.innerWidth - buttonRect.right;
-      const spaceLeft = buttonRect.left;
+      // Wait until the DOM paints, then measure
+      const rafId = requestAnimationFrame(() => {
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const dropdownRect = dropdownRef.current.getBoundingClientRect();
 
-      if (spaceRight < dropdownWidth && spaceLeft > dropdownWidth) {
-        setDropdownStyles({ left: '0px', right: 'auto' }); // flip left
-      } else if (spaceRight < dropdownWidth) {
-        setDropdownStyles({
-          right: '0px',
-          left: 'auto',
-          maxWidth: `${window.innerWidth - buttonRect.left - 8}px`, // fit small screens
-        });
-      } else {
-        setDropdownStyles({ right: '0px', left: 'auto' }); // default right
-      }
+        const spaceRight = window.innerWidth - buttonRect.right;
+        const spaceLeft = buttonRect.left;
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+
+        const newStyles = {
+          position: 'absolute',
+          zIndex: 50,
+          opacity: 1,
+          transform: 'scale(1)',
+          transition: 'opacity 0.15s ease, transform 0.15s ease',
+        };
+
+        // Vertical positioning
+        if (spaceBelow < dropdownRect.height && spaceAbove > dropdownRect.height) {
+          newStyles.bottom = '100%';
+          newStyles.top = 'auto';
+          newStyles.marginBottom = '8px';
+          newStyles.transformOrigin = 'bottom right';
+        } else {
+          newStyles.top = '100%';
+          newStyles.bottom = 'auto';
+          newStyles.marginTop = '8px';
+          newStyles.transformOrigin = 'top right';
+        }
+
+        // Horizontal positioning
+        if (spaceRight < dropdownRect.width && spaceLeft > dropdownRect.width) {
+          newStyles.right = '0px';
+          newStyles.left = 'auto';
+        } else if (spaceRight < dropdownRect.width) {
+          newStyles.left = `${Math.max(8, window.innerWidth - dropdownRect.width - 8)}px`;
+          newStyles.right = 'auto';
+        } else if (spaceLeft < dropdownRect.width / 2) {
+          newStyles.left = '0px';
+          newStyles.right = 'auto';
+        } else {
+          newStyles.right = '0px';
+          newStyles.left = 'auto';
+        }
+
+        // Mobile responsiveness
+        newStyles.maxWidth = '95vw';
+        newStyles.minWidth = '150px';
+
+        setDropdownStyles(newStyles);
+      });
+
+      return () => cancelAnimationFrame(rafId);
+    } else {
+      // Animate closing
+      setDropdownStyles((prev) => ({
+        ...prev,
+        opacity: 0,
+        transform: 'scale(0.95)',
+      }));
     }
   }, [open]);
 
@@ -51,7 +105,7 @@ export default function ThreeDotMenu() {
       <button
         ref={buttonRef}
         onClick={() => setOpen((v) => !v)}
-        className="p-2 rounded-full hover:bg-gray-100"
+        className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition"
       >
         <MoreHorizontal />
       </button>
@@ -60,7 +114,7 @@ export default function ThreeDotMenu() {
         <div
           ref={dropdownRef}
           style={dropdownStyles}
-          className="absolute top-full mt-2 bg-white shadow-lg rounded-lg p-3 z-50 w-auto min-w-[150px] max-w-[90vw] flex flex-col gap-2"
+          className="absolute bg-white shadow-lg rounded-lg p-3 border border-gray-100 flex flex-col gap-2"
         >
           <div className="text-sm md:text-base font-semibold">Last days filter</div>
           <select
